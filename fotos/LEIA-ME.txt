@@ -1,0 +1,10 @@
+Coloque aqui as fotos de vocês com esses nomes exatos:
+
+1.jpg
+2.jpg
+3.jpg
+4.jpg
+5.jpg
+6.jpg
+
+(pode ser .jpg ou .png, só ajustar o nome dentro do index.html se mudar a extensão)

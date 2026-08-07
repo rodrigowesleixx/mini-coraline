@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mini coraline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night: #0b1826;
+    --night2: #10233a;
+    --door: #2f5d8a;
+    --door-dark: #1f4266;
+    --thread-red: #c1443c;
+    --star: #f4d35e;
+    --cream: #f1ede4;
+    --mist: #9db4c9;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; min-height:100%;
+    background: radial-gradient(ellipse at 50% -10%, var(--night2), var(--night) 60%);
+    color: var(--cream);
+    font-family: 'Quicksand', sans-serif;
+    overflow-x:hidden;
+    scroll-behavior:smooth;
+  }
+  #entry{
+    position:fixed; inset:0; z-index:10;
+    background: var(--night);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:1.2rem; cursor:pointer;
+    transition: opacity .8s ease;
+  }
+  #entry .dot{
+    width:10px; height:10px; border-radius:50%; background:var(--star);
+    box-shadow: 0 0 12px rgba(244,211,94,.7);
+    animation: twinkle 1.6s ease-in-out infinite;
+  }
+  #entry p{ font-family:'Caveat'; font-size:1.6rem; color:var(--cream); }
+  #entry.hidden{ opacity:0; pointer-events:none; }
+
+  .stars{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+  .stars span{
+    position:absolute; width:2px; height:2px; background:var(--star);
+    border-radius:50%; opacity:.7; animation: twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.15} 50%{opacity:.9} }
+  @media (prefers-reduced-motion: reduce){
+    .stars span{animation:none; opacity:.4;}
+  }
+
+  section{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 6vh 6vw;
+    text-align:center;
+  }
+
+  h1,h2{
+    font-family:'Caveat', cursive;
+    font-weight:700;
+    color: var(--cream);
+    line-height:1.1;
+  }
+  .eyebrow{
+    font-family:'Quicksand'; font-size:.75rem; letter-spacing:.35em;
+    text-transform:uppercase; color: var(--mist); margin-bottom:1rem;
+  }
+
+  /* ---------- DOOR SCENE ---------- */
+  #door-scene{ perspective: 1200px; }
+  .frame{
+    width: min(220px, 55vw);
+    height: min(340px, 60vh);
+    background: var(--door-dark);
+    border-radius: 6px 6px 4px 4px;
+    padding: 10px;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.03), 0 30px 60px rgba(0,0,0,.6);
+    transform-style: preserve-3d;
+  }
+  .door{
+    width:100%; height:100%;
+    background: linear-gradient(160deg, var(--door), var(--door-dark) 85%);
+    border-radius:4px;
+    position:relative;
+    cursor:pointer;
+    transform-origin: left center;
+    transition: transform 1.4s cubic-bezier(.7,0,.2,1);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.06);
+  }
+  .door::before{ /* top panel */
+    content:''; position:absolute; top:14%; left:14%; right:14%; height:32%;
+    border: 2px solid rgba(0,0,0,.25); border-radius:3px;
+  }
+  .door::after{ /* bottom panel */
+    content:''; position:absolute; bottom:12%; left:14%; right:14%; height:34%;
+    border: 2px solid rgba(0,0,0,.25); border-radius:3px;
+  }
+  .knob{
+    position:absolute; right:10%; top:50%; transform:translateY(-50%);
+    width:12px; height:12px; border-radius:50%;
+    background: var(--star);
+    box-shadow: 0 0 8px rgba(244,211,94,.7);
+  }
+  .door.open{ transform: rotateY(-108deg); }
+  .glow{
+    position:absolute; inset:10px; border-radius:4px;
+    background: radial-gradient(circle at 30% 50%, rgba(244,211,94,.55), transparent 70%);
+    opacity:0; transition: opacity 1s ease .3s;
+  }
+  .frame.lit .glow{ opacity:1; }
+
+  .hint{ margin-top:2rem; font-size:.95rem; color:var(--mist); }
+  .hint button{ all:unset; }
+  #door-scene h1{ font-size: clamp(2rem, 6vw, 3rem); margin-bottom:.3rem; }
+  #door-scene p.sub{ color:var(--mist); max-width:32ch; margin: 0 auto; }
+
+  /* ---------- VIDEO SCENE ---------- */
+  #video-scene{ display:none; }
+  #video-scene h2{ font-size: clamp(1.6rem,4vw,2.2rem); margin-bottom:1.8rem; }
+  .video-frame{
+    width: min(280px, 78vw);
+    aspect-ratio: 9 / 16;
+    border-radius: 16px;
+    padding: 0;
+    background: #000;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.03), 0 30px 60px rgba(0,0,0,.6);
+    position: relative;
+    overflow: hidden;
+  }
+  .video-frame video{
+    width:100%; height:100%; display:block; object-fit:cover; background:#000;
+  }
+  .story-progress{
+    position:absolute; top:8px; left:8px; right:8px; height:2.5px; z-index:2;
+    background: rgba(255,255,255,.3); border-radius:2px; overflow:hidden;
+  }
+  .story-progress .fill{
+    height:100%; width:0%; background: var(--cream);
+  }
+  .continue-btn{
+    margin-top: 1.8rem;
+    font-family:'Quicksand'; font-weight:600; font-size:.85rem;
+    background: transparent; color: var(--mist);
+    border: 1px solid rgba(157,180,201,.4); border-radius:999px;
+    padding: .65rem 1.6rem; cursor:pointer;
+  }
+  .continue-btn:hover{ background: rgba(241,237,228,.08); }
+  .video-caption{
+    margin-top: 1.4rem;
+    font-family:'Caveat'; font-weight:500;
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+    color: var(--cream);
+    max-width: 34ch;
+    line-height: 1.4;
+  }
+
+  /* ---------- STORY / COUNTER ---------- */
+  #story{ display:none; }
+  #story h2{ font-size: clamp(1.8rem, 5vw, 2.6rem); max-width: 20ch; }
+  #story p{ max-width:44ch; color:var(--mist); margin-top:1rem; line-height:1.6; }
+  .counter{
+    margin-top: 2.5rem;
+    display:flex; flex-direction:column; align-items:center; gap:.4rem;
+  }
+  .counter .num{
+    font-family:'Caveat'; font-weight:700; font-size: clamp(3rem,10vw,5rem);
+    color: var(--star); line-height:1;
+  }
+  .counter .label{ font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; color:var(--mist); }
+  .scroll-cue{ margin-top:3rem; font-size:1.6rem; color:var(--mist); animation: bob 2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+
+  /* ---------- GALLERY / CAROUSEL ---------- */
+  #gallery{ display:none; }
+  #gallery h2{ font-size: clamp(1.6rem,4vw,2.2rem); margin-bottom:2rem; }
+  .carousel-wrap{
+    position:relative; width:100%; max-width: 420px;
+    display:flex; align-items:center; gap:.6rem;
+  }
+  .carousel{
+    display:flex; overflow-x:auto; scroll-snap-type: x mandatory;
+    gap:14px; scrollbar-width:none; border-radius:10px;
+  }
+  .carousel::-webkit-scrollbar{ display:none; }
+  .carousel .ph{
+    flex: 0 0 100%; scroll-snap-align:center;
+    aspect-ratio: 3/4; border-radius:10px; overflow:hidden;
+    background: linear-gradient(150deg, var(--night2), var(--door-dark));
+    display:flex; align-items:center; justify-content:center;
+    color: rgba(241,237,228,.35); font-size:.8rem; font-family:'Quicksand';
+    border: 1px dashed rgba(241,237,228,.15);
+  }
+  .carousel .ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .car-arrow{
+    all:unset; cursor:pointer; flex:0 0 auto;
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(241,237,228,.08); color:var(--cream);
+    font-size:1rem; user-select:none;
+  }
+  .car-arrow:hover{ background: rgba(241,237,228,.16); }
+  .dots{ display:flex; gap:.4rem; justify-content:center; margin-top:1rem; }
+  .dots span{
+    width:6px; height:6px; border-radius:50%; background: rgba(241,237,228,.25);
+    transition: background .25s ease, transform .25s ease;
+  }
+  .dots span.active{ background: var(--star); transform: scale(1.3); }
+
+  /* ---------- MUSIC ---------- */
+  #music-note{ font-size:.85rem; color:var(--mist); margin-top:2.5rem; }
+  .play-btn{
+    margin-top:1rem;
+    background: var(--door); color:var(--cream); border:none;
+    padding: .7rem 1.6rem; border-radius: 999px; font-family:'Quicksand'; font-weight:600;
+    cursor:pointer; letter-spacing:.05em; font-size:.85rem;
+    box-shadow: 0 6px 20px rgba(47,93,138,.4);
+  }
+
+  /* ---------- LETTER ---------- */
+  #letter{ display:none; }
+  #letter h2{ font-size: clamp(1.6rem,4vw,2.2rem); margin-bottom:2rem; }
+  .note{
+    max-width: 460px; width:100%;
+    background: linear-gradient(160deg, #f1ede4, #e8e2d4);
+    color: #2a2a28;
+    border-radius: 6px;
+    padding: 2.2rem 2rem;
+    transform: rotate(-1.2deg);
+    box-shadow: 0 20px 45px rgba(0,0,0,.45);
+    position:relative;
+  }
+  .note::before{
+    content:''; position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+    width:34px; height:20px; background: rgba(244,211,94,.55);
+    border: 1px solid rgba(244,211,94,.7);
+  }
+  .note p{
+    font-family:'Caveat'; font-weight:500; font-size: clamp(1.3rem, 3.2vw, 1.6rem);
+    line-height:1.5; text-align:left; white-space:pre-wrap;
+  }
+  .note .sign{ text-align:right; margin-top:1rem; font-weight:700; }
+  #ask{ display:none; }
+  .eyes{ display:flex; gap:1.2rem; margin-bottom:1.5rem; }
+  .eyes span{
+    width:14px; height:14px; border-radius:50%; background: var(--star);
+    box-shadow: 0 0 10px rgba(244,211,94,.6);
+    animation: blink 4.5s ease-in-out infinite;
+  }
+  .eyes span:nth-child(2){ animation-delay: .12s; }
+  @keyframes blink{
+    0%, 92%, 100%{ transform: scaleY(1); }
+    95%{ transform: scaleY(.08); }
+  }
+  #ask h2{ font-size: clamp(2rem,6vw,3rem); max-width: 16ch; }
+  .buttons{ margin-top:2.5rem; display:flex; gap:1.2rem; position:relative; height:60px; }
+  .yes-btn, .no-btn{
+    font-family:'Quicksand'; font-weight:700; font-size:1rem;
+    padding: .9rem 2rem; border-radius:999px; border:none; cursor:pointer;
+  }
+  .yes-btn{ background: var(--star); color: var(--night); }
+  .no-btn{ background: transparent; color: var(--mist); border:1px solid rgba(157,180,201,.4); position:relative; transition: transform .15s ease; }
+
+  #celebrate{ display:none; position:relative; overflow:hidden; }
+  #celebrate h2{ font-size: clamp(2.2rem,7vw,3.4rem); }
+  #celebrate p{ color: var(--mist); margin-top:1rem; max-width:36ch; }
+  .thread{
+    width:60px; height:2px; background: var(--thread-red); margin: 1.6rem 0; opacity:.7;
+  }
+
+  /* stitched thread divider between sections */
+  .stitch{
+    width:70%; max-width:280px; height:1px; margin: 0 auto 1.6rem;
+    background-image: repeating-linear-gradient(90deg, var(--thread-red) 0 8px, transparent 8px 16px);
+    opacity:.55;
+  }
+
+  /* falling stars / confetti on celebrate */
+  .fall-star{
+    position:absolute; top:-5%; z-index:0; pointer-events:none;
+    color: var(--star); font-size: 14px;
+    animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite;
+  }
+  @keyframes fall{
+    0%{ transform: translateY(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.9; }
+    100%{ transform: translateY(110vh) rotate(360deg); opacity:.2; }
+  }
+  #celebrate > *{ position:relative; z-index:1; }
+
+  /* share button */
+  .share-row{ margin-top:2rem; display:flex; gap:.8rem; flex-wrap:wrap; justify-content:center; }
+  .share-btn{
+    font-family:'Quicksand'; font-weight:600; font-size:.85rem;
+    background: transparent; color: var(--cream);
+    border: 1px solid rgba(241,237,228,.3); border-radius:999px;
+    padding: .65rem 1.4rem; cursor:pointer;
+  }
+  .share-btn:hover{ background: rgba(241,237,228,.08); }
+</style>
+</head>
+<body>
+
+<div id="entry">
+  <div class="dot"></div>
+  <p>toque pra entrar</p>
+  <!-- troque o src abaixo pela trilha da Coraline, ex: src="musica/coraline.mp3" -->
+  <audio id="introSong" src="musica/coraline.mp3" loop></audio>
+</div>
+
+<div class="stars" id="stars"></div>
+
+<section id="door-scene">
+  <div class="eyebrow">um outro mundo, do outro lado</div>
+  <div id="door-scene-inner">
+    <div class="frame" id="frame">
+      <div class="glow"></div>
+      <div class="door" id="door">
+        <div class="knob"></div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">
+    <p class="sub">toca na portinha, mini coraline</p>
+  </div>
+</section>
+
+<section id="video-scene">
+  <div class="eyebrow">antes de mais nada</div>
+  <h2>um pedacinho da gente</h2>
+  <div class="video-frame">
+    <div class="story-progress"><div class="fill" id="videoProgress"></div></div>
+    <!-- troque o src abaixo pelo vídeo de vocês, ex: src="video/nosso.mp4" -->
+    <video id="ourVideo" src="video/nosso.mp4" playsinline></video>
+  </div>
+  <p class="video-caption"> admirar você, te ouvir, te abraçar, te beijar, te fazer rir, te fazer sentir segura, te fazer feliz. essa é a minha forma de demonstrar que me importo.
+  </p>
+  <button class="continue-btn" id="continueBtn">continuar ↓</button>
+</section>
+
+<section id="story">
+  <div class="stitch"></div>
+  <div class="eyebrow">do outro lado da porta</div>
+  <h2>era uma vez, num mundo tão parecido com esse...</h2>
+  <p>...só que nesse aqui, a gente já escolheu ficar. desde o dia que a gente se encontrou, tudo ficou com uma cor diferente. um azul só nosso.</p>
+  <div class="counter">
+    <div class="num" id="dayCount">0</div>
+    <div class="label">dias desde 08 de junho</div>
+  </div>
+  <div class="scroll-cue">↓</div>
+</section>
+
+<section id="gallery">
+  <div class="stitch"></div>
+  <div class="eyebrow">nosso álbum</div>
+  <h2>alguns pedaços do nosso mundo</h2>
+  <div class="carousel-wrap">
+    <button class="car-arrow" id="carPrev">‹</button>
+    <div class="carousel" id="carousel">
+      <!-- troque os src abaixo pelas fotos de vocês, ex: src="fotos/1.jpg" -->
+      <div class="ph"><img src="fotos/1.jpg" alt="" onerror="this.parentElement.textContent='foto 1'"></div>
+      <div class="ph"><img src="fotos/2.jpg" alt="" onerror="this.parentElement.textContent='foto 2'"></div>
+      <div class="ph"><img src="fotos/3.jpg" alt="" onerror="this.parentElement.textContent='foto 3'"></div>
+      <div class="ph"><img src="fotos/4.jpg" alt="" onerror="this.parentElement.textContent='foto 4'"></div>
+      <div class="ph"><img src="fotos/5.jpg" alt="" onerror="this.parentElement.textContent='foto 5'"></div>
+      <div class="ph"><img src="fotos/6.jpg" alt="" onerror="this.parentElement.textContent='foto 6'"></div>
+    </div>
+    <button class="car-arrow" id="carNext">›</button>
+  </div>
+  <div class="dots" id="carDots"></div>
+  <div id="music-note">
+    tem uma música que combina com a gente
+    <br>
+    <button class="play-btn" id="playBtn">▶ tocar nossa música</button>
+    <!-- troque o src abaixo pelo mp3 de vocês, ex: src="musica/nossa.mp3" -->
+    <audio id="song" src="musica/nossa.mp3" loop></audio>
+  </div>
+</section>
+
+<section id="letter">
+  <div class="stitch"></div>
+  <div class="eyebrow"></div>
+  <h2>carta aberta para você</h2>
+  <div class="note">
+    <p>sei que você esta passando por um momento difícil e quero que você saiba que você não está sozinha. Eu estou aqui para apoiar você e estar ao seu lado, nem que seja só para ouvir você chorar ou sorrir, não precisa sentir medo de demonstrar algo ou nada do tipo apenas demonstre, esses dias estou sentindo muito a sua falta mini coraline, amo você.</p>
+    <div class="sign">— seu homem aranha</div>
+  </div>
+</section>
+
+<section id="ask">
+  <div class="stitch"></div>
+  <div class="eyes"><span></span><span></span></div>
+  <h2>então... você quer ser minha namorada?</h2>
+  <div class="buttons">
+    <button class="yes-btn" id="yesBtn">sim, quero!</button>
+    <button class="no-btn" id="noBtn">não</button>
+  </div>
+</section>
+
+<section id="celebrate">
+  <div class="stitch"></div>
+  <h2>ela disse sim 💙</h2>
+  <p>a partir de agora, esse mundo tão parecido com esse é só nosso.</p>
+  <div class="thread"></div>
+  <div class="share-row">
+    <button class="share-btn" id="shareBtn">compartilhar</button>
+    <button class="share-btn" id="saveBtn">salvar como imagem</button>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+  // stars
+  const starsWrap = document.getElementById('stars');
+  for(let i=0;i<70;i++){
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = (Math.random()*3.5)+'s';
+    starsWrap.appendChild(s);
+  }
+
+  // entry screen: unlocks audio with a real user gesture, starts the intro song
+  const entry = document.getElementById('entry');
+  const introSong = document.getElementById('introSong');
+  entry.addEventListener('click', () => {
+    introSong.volume = 1;
+    introSong.play().catch(()=>{});
+    entry.classList.add('hidden');
+    setTimeout(()=>{ entry.style.display = 'none'; }, 850);
+  }, { once:true });
+
+  function fadeAudio(audio, to, ms, onDone){
+    const from = audio.volume;
+    const start = performance.now();
+    function step(now){
+      const p = Math.min(1, (now - start) / ms);
+      audio.volume = from + (to - from) * p;
+      if(p < 1){ requestAnimationFrame(step); }
+      else if(onDone){ onDone(); }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // door open
+  const door = document.getElementById('door');
+  const frame = document.getElementById('frame');
+  const doorScene = document.getElementById('door-scene');
+  const videoScene = document.getElementById('video-scene');
+  const story = document.getElementById('story');
+  const gallery = document.getElementById('gallery');
+  const ask = document.getElementById('ask');
+  const ourVideo = document.getElementById('ourVideo');
+  const continueBtn = document.getElementById('continueBtn');
+  const videoProgress = document.getElementById('videoProgress');
+
+  ourVideo.addEventListener('timeupdate', () => {
+    if(ourVideo.duration){
+      videoProgress.style.width = (ourVideo.currentTime / ourVideo.duration * 100) + '%';
+    }
+  });
+  document.querySelector('.video-frame').addEventListener('click', () => {
+    if(ourVideo.paused){ ourVideo.play().catch(()=>{}); }
+    else{ ourVideo.pause(); }
+  });
+
+  door.addEventListener('click', () => {
+    if(door.classList.contains('open')) return;
+    door.classList.add('open');
+    frame.classList.add('lit');
+
+    // crossfade: a trilha da Coraline vai baixando enquanto a porta abre
+    if(!introSong.paused){
+      fadeAudio(introSong, 0, 1200, () => introSong.pause());
+    }
+
+    setTimeout(() => {
+      videoScene.style.display = 'flex';
+      videoScene.scrollIntoView({behavior:'smooth'});
+      ourVideo.play().catch(()=>{});
+    }, 900);
+  });
+
+  let revealed = false;
+  function revealRest(){
+    if(revealed) return;
+    revealed = true;
+    ourVideo.pause();
+    story.style.display = 'flex';
+    story.scrollIntoView({behavior:'smooth'});
+    gallery.style.display = 'flex';
+    document.getElementById('letter').style.display = 'flex';
+    ask.style.display = 'flex';
+    animateCounter();
+
+    // a nova música (a que você for trocar em musica/nossa.mp3) entra suave
+    song.volume = 0;
+    song.play().catch(()=>{});
+    fadeAudio(song, 1, 1500);
+    playBtn.textContent = '⏸ pausar';
+  }
+  ourVideo.addEventListener('ended', revealRest);
+  continueBtn.addEventListener('click', revealRest);
+
+  // counter since june 8 (assumes current year; adjust ANO if needed)
+  function animateCounter(){
+    const start = new Date('2026-06-08T00:00:00');
+    const now = new Date();
+    let days = Math.floor((now - start) / (1000*60*60*24));
+    if(days < 0) days = 0;
+    const el = document.getElementById('dayCount');
+    let n = 0;
+    const step = Math.max(1, Math.floor(days/60));
+    const t = setInterval(()=>{
+      n += step;
+      if(n >= days){ n = days; clearInterval(t); }
+      el.textContent = n;
+    }, 20);
+  }
+
+  // music
+  const song = document.getElementById('song');
+  const playBtn = document.getElementById('playBtn');
+  playBtn.addEventListener('click', () => {
+    if(song.paused){ song.play().catch(()=>{}); playBtn.textContent = '⏸ pausar'; }
+    else { song.pause(); playBtn.textContent = '▶ tocar nossa música'; }
+  });
+
+  // dodge no button
+  const noBtn = document.getElementById('noBtn');
+  const yesBtn = document.getElementById('yesBtn');
+  const btnRow = document.querySelector('.buttons');
+  noBtn.addEventListener('mouseenter', dodge);
+  noBtn.addEventListener('click', dodge);
+  noBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); dodge(); }, {passive:false});
+  function dodge(){
+    const rowW = btnRow.clientWidth;
+    const rowH = btnRow.clientHeight;
+    const maxX = Math.max(0, rowW - noBtn.clientWidth - 20);
+    const maxY = Math.max(0, rowH - noBtn.clientHeight);
+    const x = (Math.random()*maxX) - maxX/2;
+    const y = (Math.random()*maxY) - maxY/2;
+    noBtn.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  yesBtn.addEventListener('click', () => {
+    const celebrate = document.getElementById('celebrate');
+    celebrate.style.display = 'flex';
+    celebrate.scrollIntoView({behavior:'smooth'});
+    if(song.paused){ song.play().catch(()=>{}); playBtn.textContent = '⏸ pausar'; }
+    spawnFallingStars(celebrate);
+  });
+
+  // falling stars on the celebration screen
+  function spawnFallingStars(container){
+    if(container.dataset.spawned) return;
+    container.dataset.spawned = '1';
+    const glyphs = ['✦','✧','★','·'];
+    for(let i=0;i<28;i++){
+      const el = document.createElement('span');
+      el.className = 'fall-star';
+      el.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+      el.style.left = Math.random()*100+'%';
+      el.style.fontSize = (10 + Math.random()*14)+'px';
+      el.style.animationDuration = (4 + Math.random()*5)+'s';
+      el.style.animationDelay = (Math.random()*4)+'s';
+      container.appendChild(el);
+    }
+  }
+
+  // carousel
+  const carousel = document.getElementById('carousel');
+  const carPrev = document.getElementById('carPrev');
+  const carNext = document.getElementById('carNext');
+  const carDotsWrap = document.getElementById('carDots');
+  const slides = carousel.children.length;
+  for(let i=0;i<slides;i++){
+    const d = document.createElement('span');
+    if(i===0) d.classList.add('active');
+    carDotsWrap.appendChild(d);
+  }
+  const dots = carDotsWrap.children;
+  function updateDots(){
+    const idx = Math.round(carousel.scrollLeft / carousel.clientWidth);
+    for(let i=0;i<dots.length;i++){ dots[i].classList.toggle('active', i===idx); }
+  }
+  carousel.addEventListener('scroll', () => {
+    clearTimeout(carousel._t);
+    carousel._t = setTimeout(updateDots, 80);
+  });
+  carPrev.addEventListener('click', () => {
+    carousel.scrollBy({left: -carousel.clientWidth, behavior:'smooth'});
+  });
+  carNext.addEventListener('click', () => {
+    carousel.scrollBy({left: carousel.clientWidth, behavior:'smooth'});
+  });
+  let autoAdvance = setInterval(() => {
+    const atEnd = Math.round(carousel.scrollLeft + carousel.clientWidth) >= carousel.scrollWidth;
+    carousel.scrollBy({left: atEnd ? -carousel.scrollWidth : carousel.clientWidth, behavior:'smooth'});
+  }, 4500);
+  carousel.addEventListener('pointerdown', () => clearInterval(autoAdvance));
+
+  // share / save as image
+  const shareBtn = document.getElementById('shareBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  shareBtn.addEventListener('click', async () => {
+    const shareData = {
+      title: 'mini coraline',
+      text: 'ela disse sim 💙',
+    };
+    if(navigator.share){
+      try{ await navigator.share(shareData); } catch(e){}
+    } else {
+      try{
+        await navigator.clipboard.writeText(shareData.text + ' — ' + location.href);
+        shareBtn.textContent = 'copiado!';
+        setTimeout(()=> shareBtn.textContent = 'compartilhar', 1800);
+      } catch(e){}
+    }
+  });
+  saveBtn.addEventListener('click', () => {
+    if(typeof html2canvas === 'undefined'){ return; }
+    saveBtn.textContent = 'gerando...';
+    html2canvas(document.getElementById('celebrate'), {backgroundColor: '#0b1826'}).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'ela-disse-sim.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      saveBtn.textContent = 'salvar como imagem';
+    });
+  });
+</script>
+</body>
+</html>

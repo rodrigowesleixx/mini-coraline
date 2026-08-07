@@ -1,0 +1,4 @@
+Coloque aqui dois arquivos de música:
+
+coraline.mp3   -> toca na tela inicial, antes de abrir a porta
+nossa.mp3      -> toca depois que ela abre a porta e o vídeo termina
