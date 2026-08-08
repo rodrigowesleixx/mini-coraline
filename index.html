@@ -245,33 +245,6 @@
     line-height:1.5; text-align:left; white-space:pre-wrap;
   }
   .note .sign{ text-align:right; margin-top:1rem; font-weight:700; }
-  #ask{ display:none; }
-  .eyes{ display:flex; gap:1.2rem; margin-bottom:1.5rem; }
-  .eyes span{
-    width:14px; height:14px; border-radius:50%; background: var(--star);
-    box-shadow: 0 0 10px rgba(244,211,94,.6);
-    animation: blink 4.5s ease-in-out infinite;
-  }
-  .eyes span:nth-child(2){ animation-delay: .12s; }
-  @keyframes blink{
-    0%, 92%, 100%{ transform: scaleY(1); }
-    95%{ transform: scaleY(.08); }
-  }
-  #ask h2{ font-size: clamp(2rem,6vw,3rem); max-width: 16ch; }
-  .buttons{ margin-top:2.5rem; display:flex; gap:1.2rem; position:relative; height:60px; }
-  .yes-btn, .no-btn{
-    font-family:'Quicksand'; font-weight:700; font-size:1rem;
-    padding: .9rem 2rem; border-radius:999px; border:none; cursor:pointer;
-  }
-  .yes-btn{ background: var(--star); color: var(--night); }
-  .no-btn{ background: transparent; color: var(--mist); border:1px solid rgba(157,180,201,.4); position:relative; transition: transform .15s ease; }
-
-  #celebrate{ display:none; position:relative; overflow:hidden; }
-  #celebrate h2{ font-size: clamp(2.2rem,7vw,3.4rem); }
-  #celebrate p{ color: var(--mist); margin-top:1rem; max-width:36ch; }
-  .thread{
-    width:60px; height:2px; background: var(--thread-red); margin: 1.6rem 0; opacity:.7;
-  }
 
   /* stitched thread divider between sections */
   .stitch{
@@ -280,28 +253,6 @@
     opacity:.55;
   }
 
-  /* falling stars / confetti on celebrate */
-  .fall-star{
-    position:absolute; top:-5%; z-index:0; pointer-events:none;
-    color: var(--star); font-size: 14px;
-    animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite;
-  }
-  @keyframes fall{
-    0%{ transform: translateY(0) rotate(0deg); opacity:0; }
-    10%{ opacity:.9; }
-    100%{ transform: translateY(110vh) rotate(360deg); opacity:.2; }
-  }
-  #celebrate > *{ position:relative; z-index:1; }
-
-  /* share button */
-  .share-row{ margin-top:2rem; display:flex; gap:.8rem; flex-wrap:wrap; justify-content:center; }
-  .share-btn{
-    font-family:'Quicksand'; font-weight:600; font-size:.85rem;
-    background: transparent; color: var(--cream);
-    border: 1px solid rgba(241,237,228,.3); border-radius:999px;
-    padding: .65rem 1.4rem; cursor:pointer;
-  }
-  .share-btn:hover{ background: rgba(241,237,228,.08); }
 </style>
 </head>
 <body>
@@ -392,28 +343,6 @@
   </div>
 </section>
 
-<section id="ask">
-  <div class="stitch"></div>
-  <div class="eyes"><span></span><span></span></div>
-  <h2>então... você quer ser minha namorada?</h2>
-  <div class="buttons">
-    <button class="yes-btn" id="yesBtn">sim, quero!</button>
-    <button class="no-btn" id="noBtn">não</button>
-  </div>
-</section>
-
-<section id="celebrate">
-  <div class="stitch"></div>
-  <h2>ela disse sim 💙</h2>
-  <p>a partir de agora, esse mundo tão parecido com esse é só nosso.</p>
-  <div class="thread"></div>
-  <div class="share-row">
-    <button class="share-btn" id="shareBtn">compartilhar</button>
-    <button class="share-btn" id="saveBtn">salvar como imagem</button>
-  </div>
-</section>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
   // stars
@@ -455,7 +384,6 @@
   const videoScene = document.getElementById('video-scene');
   const story = document.getElementById('story');
   const gallery = document.getElementById('gallery');
-  const ask = document.getElementById('ask');
   const ourVideo = document.getElementById('ourVideo');
   const continueBtn = document.getElementById('continueBtn');
   const videoProgress = document.getElementById('videoProgress');
@@ -496,7 +424,6 @@
     story.scrollIntoView({behavior:'smooth'});
     gallery.style.display = 'flex';
     document.getElementById('letter').style.display = 'flex';
-    ask.style.display = 'flex';
     animateCounter();
 
     // a nova música (a que você for trocar em musica/nossa.mp3) entra suave
@@ -532,48 +459,6 @@
     else { song.pause(); playBtn.textContent = '▶ tocar nossa música'; }
   });
 
-  // dodge no button
-  const noBtn = document.getElementById('noBtn');
-  const yesBtn = document.getElementById('yesBtn');
-  const btnRow = document.querySelector('.buttons');
-  noBtn.addEventListener('mouseenter', dodge);
-  noBtn.addEventListener('click', dodge);
-  noBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); dodge(); }, {passive:false});
-  function dodge(){
-    const rowW = btnRow.clientWidth;
-    const rowH = btnRow.clientHeight;
-    const maxX = Math.max(0, rowW - noBtn.clientWidth - 20);
-    const maxY = Math.max(0, rowH - noBtn.clientHeight);
-    const x = (Math.random()*maxX) - maxX/2;
-    const y = (Math.random()*maxY) - maxY/2;
-    noBtn.style.transform = `translate(${x}px, ${y}px)`;
-  }
-
-  yesBtn.addEventListener('click', () => {
-    const celebrate = document.getElementById('celebrate');
-    celebrate.style.display = 'flex';
-    celebrate.scrollIntoView({behavior:'smooth'});
-    if(song.paused){ song.play().catch(()=>{}); playBtn.textContent = '⏸ pausar'; }
-    spawnFallingStars(celebrate);
-  });
-
-  // falling stars on the celebration screen
-  function spawnFallingStars(container){
-    if(container.dataset.spawned) return;
-    container.dataset.spawned = '1';
-    const glyphs = ['✦','✧','★','·'];
-    for(let i=0;i<28;i++){
-      const el = document.createElement('span');
-      el.className = 'fall-star';
-      el.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
-      el.style.left = Math.random()*100+'%';
-      el.style.fontSize = (10 + Math.random()*14)+'px';
-      el.style.animationDuration = (4 + Math.random()*5)+'s';
-      el.style.animationDelay = (Math.random()*4)+'s';
-      container.appendChild(el);
-    }
-  }
-
   // carousel
   const carousel = document.getElementById('carousel');
   const carPrev = document.getElementById('carPrev');
@@ -605,36 +490,6 @@
     carousel.scrollBy({left: atEnd ? -carousel.scrollWidth : carousel.clientWidth, behavior:'smooth'});
   }, 4500);
   carousel.addEventListener('pointerdown', () => clearInterval(autoAdvance));
-
-  // share / save as image
-  const shareBtn = document.getElementById('shareBtn');
-  const saveBtn = document.getElementById('saveBtn');
-  shareBtn.addEventListener('click', async () => {
-    const shareData = {
-      title: 'mini coraline',
-      text: 'ela disse sim 💙',
-    };
-    if(navigator.share){
-      try{ await navigator.share(shareData); } catch(e){}
-    } else {
-      try{
-        await navigator.clipboard.writeText(shareData.text + ' — ' + location.href);
-        shareBtn.textContent = 'copiado!';
-        setTimeout(()=> shareBtn.textContent = 'compartilhar', 1800);
-      } catch(e){}
-    }
-  });
-  saveBtn.addEventListener('click', () => {
-    if(typeof html2canvas === 'undefined'){ return; }
-    saveBtn.textContent = 'gerando...';
-    html2canvas(document.getElementById('celebrate'), {backgroundColor: '#0b1826'}).then(canvas => {
-      const link = document.createElement('a');
-      link.download = 'ela-disse-sim.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      saveBtn.textContent = 'salvar como imagem';
-    });
-  });
 </script>
 </body>
 </html>
